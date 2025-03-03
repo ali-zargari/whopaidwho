@@ -7,7 +7,6 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorNotification from "@/components/ErrorNotification";
 import DonationPieChart from "@/components/DonationPieChart";
 import { Politician, DonorData } from "@/types";
-import { POLITICIANS } from "@/data/politicians";
 
 export default function Home() {
   const [selectedPolitician, setSelectedPolitician] = useState<Politician | null>(null);
@@ -15,18 +14,53 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMockData, setIsMockData] = useState(false);
+  const [politicians, setPoliticians] = useState<Politician[]>([]);
+  const [isLoadingPoliticians, setIsLoadingPoliticians] = useState(true);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedParty, setSelectedParty] = useState<string>("all");
   const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedPosition, setSelectedPosition] = useState<string>("all");
+  const [showIncumbents, setShowIncumbents] = useState<boolean>(true);
+  const [showCandidates, setShowCandidates] = useState<boolean>(false);
+  
+  // Add a new state to track which tab is active
+  const [activeTab, setActiveTab] = useState<'members' | 'candidates'>('members');
+  
+  // Fetch politicians on component mount
+  useEffect(() => {
+    async function fetchPoliticians() {
+      setIsLoadingPoliticians(true);
+      try {
+        const url = activeTab === 'candidates' 
+          ? '/api/politicians?candidates=true'
+          : '/api/politicians';
+          
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.error) {
+          console.warn("Warning fetching politicians:", data.error);
+        }
+        
+        setPoliticians(data.politicians || []);
+      } catch (err) {
+        console.error(`Error fetching ${activeTab}:`, err);
+        setPoliticians([]); // Set empty array on error
+      } finally {
+        setIsLoadingPoliticians(false);
+      }
+    }
+    
+    fetchPoliticians();
+  }, [activeTab]); // Re-fetch when tab changes
   
   // Get unique states from politicians
-  const states = [...new Set(POLITICIANS.map(p => p.state))].sort();
+  const states = [...new Set(politicians.map(p => p.state))].sort();
   
   // Get unique positions from politicians
-  const positions = [...new Set(POLITICIANS.map(p => p.position))].sort();
+  const positions = [...new Set(politicians.map(p => p.position))].sort();
 
   const handlePoliticianSelect = async (politician: Politician) => {
     setSelectedPolitician(politician);
@@ -88,7 +122,7 @@ export default function Home() {
   };
   
   // Filter politicians
-  const filteredPoliticians = POLITICIANS.filter(politician => {
+  const filteredPoliticians = politicians.filter(politician => {
     // Filter by search term
     const matchesSearch = searchTerm === "" || 
       politician.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -105,7 +139,14 @@ export default function Home() {
     const matchesPosition = selectedPosition === "all" || 
       politician.position === selectedPosition;
     
-    return matchesSearch && matchesParty && matchesState && matchesPosition;
+    // Update the status filter logic to properly handle incumbents and candidates
+    const matchesStatus = 
+      (!showIncumbents && !showCandidates) || // Show all if neither is selected
+      (showIncumbents && showCandidates) ||   // Show all if both are selected
+      (showIncumbents && politician.isIncumbent) || 
+      (showCandidates && politician.isCandidate);
+    
+    return matchesSearch && matchesParty && matchesState && matchesPosition && matchesStatus;
   });
   
   // Group politicians by state for the state view
@@ -249,6 +290,26 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
+              </div>
+              
+              {/* Then add the tab UI */}
+              <div className="flex space-x-2 mb-4">
+                <button
+                  className={`px-4 py-2 rounded-md ${
+                    activeTab === 'members' ? 'bg-primary text-white' : 'bg-card-bg text-secondary'
+                  }`}
+                  onClick={() => setActiveTab('members')}
+                >
+                  Current Members
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md ${
+                    activeTab === 'candidates' ? 'bg-primary text-white' : 'bg-card-bg text-secondary'
+                  }`}
+                  onClick={() => setActiveTab('candidates')}
+                >
+                  Candidates
+                </button>
               </div>
               
               <div className="text-sm text-secondary">

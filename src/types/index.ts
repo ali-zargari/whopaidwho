@@ -5,7 +5,10 @@ export interface Politician {
   party: string;
   state: string;
   position: string;
-  profileUrl?: string;
+  isIncumbent: boolean;
+  isCandidate: boolean;
+  district?: string;
+  profileUrl: string;
 }
 
 export interface DonorData {
