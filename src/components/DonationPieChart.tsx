@@ -26,6 +26,52 @@ export default function DonationPieChart({ donors, type }: DonationPieChartProps
     const ctx = chartRef.current.getContext("2d");
     if (!ctx) return;
     
+    // Handle empty donor data
+    if (!donors || donors.length === 0) {
+      // Create an empty chart with a message
+      chartInstance.current = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["No Data Available"],
+          datasets: [{
+            data: [1],
+            backgroundColor: ["#6B7280"],
+            borderColor: "rgba(30, 30, 30, 1)",
+            borderWidth: 2,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: {
+                color: "rgba(255, 255, 255, 0.8)",
+                font: {
+                  size: 12
+                },
+                padding: 15
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function() {
+                  return "No donor data available";
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      return () => {
+        if (chartInstance.current) {
+          chartInstance.current.destroy();
+        }
+      };
+    }
+    
     let chartData: ChartData;
     
     if (type === "industry") {

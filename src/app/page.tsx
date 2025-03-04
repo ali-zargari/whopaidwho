@@ -69,9 +69,30 @@ export default function Home() {
     setIsMockData(false);
     
     try {
+      // Enhanced logging to verify CID
+      console.log("Selected politician details:", {
+        name: politician.name,
+        cid: politician.cid,
+        party: politician.party,
+        state: politician.state,
+        position: politician.position
+      });
+      
+      if (!politician.cid || politician.cid === "undefined" || politician.cid === "") {
+        throw new Error(`Invalid candidate ID for ${politician.name}. Cannot fetch donor data.`);
+      }
+      
+      console.log(`Fetching donor data for: ${politician.name} with CID: ${politician.cid}`);
       const response = await fetch(`/api/donors?cid=${politician.cid}`);
       const data = await response.json();
       
+      console.log("Donor data response:", {
+        donorCount: data.donors?.length || 0,
+        firstDonor: data.donors?.[0] || null,
+        message: data.message || null,
+        error: data.error || null
+      });
+
       if (data.isMockData) {
         setIsMockData(true);
       }
@@ -80,9 +101,15 @@ export default function Home() {
         throw new Error(data.error);
       }
       
-      setDonorData(data.donors);
+      if (!data.donors || data.donors.length === 0) {
+        setError(`No donor data found for ${politician.name}. This could be due to no reported donations in the current election cycle.`);
+        setDonorData([]);
+      } else {
+        setDonorData(data.donors);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch donor data");
+      setDonorData([]);
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +117,7 @@ export default function Home() {
 
   // Find the dominant industry
   const getDominantIndustry = () => {
-    if (!donorData) return null;
+    if (!donorData || donorData.length === 0) return null;
     
     const industryMap = new Map<string, number>();
     
@@ -117,7 +144,7 @@ export default function Home() {
   
   // Get top 3 donors
   const getTopDonors = () => {
-    if (!donorData) return [];
+    if (!donorData || donorData.length === 0) return [];
     return [...donorData].sort((a, b) => b.amount - a.amount).slice(0, 3);
   };
   
@@ -466,13 +493,13 @@ export default function Home() {
               <div className="p-8 md:w-2/3 bg-black/10">
                 <div className="h-[250px] mb-8">
                   <h3 className="text-sm font-medium mb-3 text-secondary uppercase tracking-wider">Funding Breakdown</h3>
-                  <DonationPieChart donors={donorData} type="industry" />
+                  <DonationPieChart donors={donorData || []} type="industry" />
                 </div>
                 
                 <div className="mt-8 border-t border-border pt-6">
                   <h2 className="text-2xl font-bold mb-4">The Bottom Line</h2>
                   
-                  {dominantIndustry && (
+                  {dominantIndustry ? (
                     <div className="mb-6">
                       <div className="text-4xl font-bold text-primary mb-3">
                         {dominantIndustry.industry}
@@ -489,6 +516,25 @@ export default function Home() {
                           With significant funding from the {dominantIndustry.industry.toLowerCase()} sector, 
                           {selectedPolitician.name}'s voting record and policy priorities are likely influenced 
                           by these financial relationships.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-6">
+                      <div className="text-4xl font-bold text-gray-500 mb-3">
+                        No Dominant Industry
+                      </div>
+                      <p className="text-xl leading-relaxed">
+                        No significant donor data is available for {selectedPolitician.name} in the current election cycle.
+                        This could be because they haven't reported donations yet, or because their campaign is just beginning.
+                      </p>
+                      
+                      <div className="mt-6 p-4 bg-gray-800/50 border-l-4 border-gray-500 rounded-r-lg">
+                        <h4 className="font-bold mb-2">What this means:</h4>
+                        <p>
+                          Without donor data, it's difficult to determine which industries might influence 
+                          {selectedPolitician.name}'s policy positions. Check back later as more campaign finance 
+                          data becomes available.
                         </p>
                       </div>
                     </div>
