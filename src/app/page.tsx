@@ -16,7 +16,7 @@ export default function Home() {
   const [isMockData, setIsMockData] = useState(false);
   const [politicians, setPoliticians] = useState<Politician[]>([]);
   const [isLoadingPoliticians, setIsLoadingPoliticians] = useState(true);
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedParty, setSelectedParty] = useState<string>("all");
@@ -24,26 +24,26 @@ export default function Home() {
   const [selectedPosition, setSelectedPosition] = useState<string>("all");
   const [showIncumbents, setShowIncumbents] = useState<boolean>(true);
   const [showCandidates, setShowCandidates] = useState<boolean>(false);
-  
+
   // Add a new state to track which tab is active
   const [activeTab, setActiveTab] = useState<'members' | 'candidates'>('members');
-  
+
   // Fetch politicians on component mount
   useEffect(() => {
     async function fetchPoliticians() {
       setIsLoadingPoliticians(true);
       try {
-        const url = activeTab === 'candidates' 
+        const url = activeTab === 'candidates'
           ? '/api/politicians?candidates=true'
           : '/api/politicians';
-          
+
         const response = await fetch(url);
         const data = await response.json();
-        
+
         if (data.error) {
           console.warn("Warning fetching politicians:", data.error);
         }
-        
+
         setPoliticians(data.politicians || []);
       } catch (err) {
         console.error(`Error fetching ${activeTab}:`, err);
@@ -52,13 +52,13 @@ export default function Home() {
         setIsLoadingPoliticians(false);
       }
     }
-    
+
     fetchPoliticians();
   }, [activeTab]); // Re-fetch when tab changes
-  
+
   // Get unique states from politicians
   const states = [...new Set(politicians.map(p => p.state))].sort();
-  
+
   // Get unique positions from politicians
   const positions = [...new Set(politicians.map(p => p.position))].sort();
 
@@ -67,7 +67,7 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     setIsMockData(false);
-    
+
     try {
       // Enhanced logging to verify CID
       console.log("Selected politician details:", {
@@ -77,15 +77,19 @@ export default function Home() {
         state: politician.state,
         position: politician.position
       });
-      
+
       if (!politician.cid || politician.cid === "undefined" || politician.cid === "") {
         throw new Error(`Invalid candidate ID for ${politician.name}. Cannot fetch donor data.`);
       }
-      
-      console.log(`Fetching donor data for: ${politician.name} with CID: ${politician.cid}`);
-      const response = await fetch(`/api/donors?cid=${politician.cid}`);
+
+      // Get the current election cycle (use current even year or previous odd year)
+      const currentYear = new Date().getFullYear();
+      const cycle = currentYear % 2 === 0 ? currentYear : currentYear - 1;
+
+      console.log(`Fetching donor data for: ${politician.name} with CID: ${politician.cid} (cycle: ${cycle})`);
+      const response = await fetch(`/api/donors?cid=${politician.cid}&cycle=${cycle}`);
       const data = await response.json();
-      
+
       console.log("Donor data response:", {
         donorCount: data.donors?.length || 0,
         firstDonor: data.donors?.[0] || null,
@@ -96,11 +100,11 @@ export default function Home() {
       if (data.isMockData) {
         setIsMockData(true);
       }
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
-      
+
       if (!data.donors || data.donors.length === 0) {
         setError(`No donor data found for ${politician.name}. This could be due to no reported donations in the current election cycle.`);
         setDonorData([]);
@@ -118,64 +122,64 @@ export default function Home() {
   // Find the dominant industry
   const getDominantIndustry = () => {
     if (!donorData || donorData.length === 0) return null;
-    
+
     const industryMap = new Map<string, number>();
-    
+
     donorData.forEach(donor => {
       const industry = donor.industry || "Unknown";
       const currentAmount = industryMap.get(industry) || 0;
       industryMap.set(industry, currentAmount + donor.amount);
     });
-    
+
     let dominantIndustry = "";
     let highestAmount = 0;
-    
+
     industryMap.forEach((amount, industry) => {
       if (amount > highestAmount) {
         highestAmount = amount;
         dominantIndustry = industry;
       }
     });
-    
+
     return { industry: dominantIndustry, amount: highestAmount };
   };
 
   const dominantIndustry = donorData ? getDominantIndustry() : null;
-  
+
   // Get top 3 donors
   const getTopDonors = () => {
     if (!donorData || donorData.length === 0) return [];
     return [...donorData].sort((a, b) => b.amount - a.amount).slice(0, 3);
   };
-  
+
   // Filter politicians
   const filteredPoliticians = politicians.filter(politician => {
     // Filter by search term
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch = searchTerm === "" ||
       politician.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     // Filter by party
-    const matchesParty = selectedParty === "all" || 
+    const matchesParty = selectedParty === "all" ||
       politician.party === selectedParty;
-    
+
     // Filter by state
-    const matchesState = selectedState === "all" || 
+    const matchesState = selectedState === "all" ||
       politician.state === selectedState;
-    
+
     // Filter by position
-    const matchesPosition = selectedPosition === "all" || 
+    const matchesPosition = selectedPosition === "all" ||
       politician.position === selectedPosition;
-    
+
     // Update the status filter logic to properly handle incumbents and candidates
-    const matchesStatus = 
+    const matchesStatus =
       (!showIncumbents && !showCandidates) || // Show all if neither is selected
       (showIncumbents && showCandidates) ||   // Show all if both are selected
-      (showIncumbents && politician.isIncumbent) || 
+      (showIncumbents && politician.isIncumbent) ||
       (showCandidates && politician.isCandidate);
-    
+
     return matchesSearch && matchesParty && matchesState && matchesPosition && matchesStatus;
   });
-  
+
   // Group politicians by state for the state view
   const politiciansByState = states.reduce((acc, state) => {
     const stateMatches = filteredPoliticians.filter(p => p.state === state);
@@ -191,7 +195,7 @@ export default function Home() {
       {!selectedPolitician && (
         <div className="relative bg-gradient-to-b from-primary/20 to-background py-16 px-4">
           <div className="max-w-5xl mx-auto text-center">
-            <motion.h1 
+            <motion.h1
               className="text-4xl md:text-6xl font-bold mb-4 text-foreground"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -199,7 +203,7 @@ export default function Home() {
             >
               Follow the Money
             </motion.h1>
-            <motion.p 
+            <motion.p
               className="text-xl md:text-2xl text-foreground/80 mb-8 max-w-3xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -207,7 +211,7 @@ export default function Home() {
             >
               Discover who's really funding U.S. politicians and understand whose interests they truly represent.
             </motion.p>
-            
+
             <motion.div
               className="flex flex-wrap justify-center gap-4 mb-8"
               initial={{ opacity: 0, y: 20 }}
@@ -227,7 +231,7 @@ export default function Home() {
                 <span>Independents</span>
               </div>
             </motion.div>
-            
+
             <motion.div
               className="bg-black/40 backdrop-blur-sm p-6 rounded-xl max-w-2xl mx-auto"
               initial={{ opacity: 0 }}
@@ -251,7 +255,7 @@ export default function Home() {
             {/* Filters */}
             <div className="mb-8 bg-card-bg rounded-xl p-6 shadow-lg">
               <h2 className="text-xl font-bold mb-4">Find Politicians</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div>
                   <label htmlFor="search" className="block text-sm font-medium mb-1 text-secondary">
@@ -266,7 +270,7 @@ export default function Home() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="party" className="block text-sm font-medium mb-1 text-secondary">
                     Party
@@ -283,7 +287,7 @@ export default function Home() {
                     <option value="Independent">Independent</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="state" className="block text-sm font-medium mb-1 text-secondary">
                     State
@@ -300,7 +304,7 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="position" className="block text-sm font-medium mb-1 text-secondary">
                     Position
@@ -318,7 +322,7 @@ export default function Home() {
                   </select>
                 </div>
               </div>
-              
+
               {/* Then add the tab UI */}
               <div className="flex space-x-2 mb-4">
                 <button
@@ -338,7 +342,7 @@ export default function Home() {
                   Candidates
                 </button>
               </div>
-              
+
               <div className="text-sm text-secondary">
                 Showing {filteredPoliticians.length} politicians
                 {selectedParty !== "all" && ` from the ${selectedParty} party`}
@@ -346,7 +350,7 @@ export default function Home() {
                 {selectedPosition !== "all" && ` serving as ${selectedPosition}s`}
               </div>
             </div>
-            
+
             {/* Display by state if state filter is not applied */}
             {selectedState === "all" ? (
               <div className="space-y-8">
@@ -358,7 +362,7 @@ export default function Home() {
                         ({politicians.length} {politicians.length === 1 ? 'politician' : 'politicians'})
                       </span>
                     </h2>
-                    
+
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       {politicians.map(politician => (
                         <motion.button
@@ -426,14 +430,14 @@ export default function Home() {
         )}
 
         {selectedPolitician && donorData && !isLoading && (
-          <motion.div 
+          <motion.div
             className="bg-card-bg rounded-xl overflow-hidden shadow-xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             {/* Back button */}
-            <button 
+            <button
               onClick={() => {
                 setSelectedPolitician(null);
                 setDonorData(null);
@@ -442,7 +446,7 @@ export default function Home() {
             >
               ← Back
             </button>
-            
+
             {/* Politician info */}
             <div className="flex flex-col md:flex-row">
               <div className="p-8 md:w-1/3 bg-gradient-to-b from-black/30 to-transparent">
@@ -454,7 +458,7 @@ export default function Home() {
                   `}>
                     {selectedPolitician.name.charAt(0)}
                   </div>
-                  
+
                   <h2 className="text-2xl font-bold mb-1">{selectedPolitician.name}</h2>
                   <div className="flex items-center mb-6">
                     <span className={`inline-block w-3 h-3 rounded-full mr-2
@@ -466,7 +470,7 @@ export default function Home() {
                       {selectedPolitician.party}, {selectedPolitician.state} • {selectedPolitician.position}
                     </span>
                   </div>
-                  
+
                   {/* Top donors */}
                   <div className="w-full">
                     <h3 className="text-sm font-medium mb-3 text-secondary uppercase tracking-wider">Top Donors</h3>
@@ -488,33 +492,38 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Charts and conclusion */}
               <div className="p-8 md:w-2/3 bg-black/10">
                 <div className="h-[250px] mb-8">
-                  <h3 className="text-sm font-medium mb-3 text-secondary uppercase tracking-wider">Funding Breakdown</h3>
+                  <h3 className="text-sm font-medium mb-3 text-secondary uppercase tracking-wider">
+                    Funding Breakdown
+                    <span className="ml-2 text-xs font-normal normal-case">
+                      ({new Date().getFullYear() % 2 === 0 ? new Date().getFullYear() : new Date().getFullYear() - 1} election cycle)
+                    </span>
+                  </h3>
                   <DonationPieChart donors={donorData || []} type="industry" />
                 </div>
-                
+
                 <div className="mt-8 border-t border-border pt-6">
                   <h2 className="text-2xl font-bold mb-4">The Bottom Line</h2>
-                  
+
                   {dominantIndustry ? (
                     <div className="mb-6">
                       <div className="text-4xl font-bold text-primary mb-3">
                         {dominantIndustry.industry}
                       </div>
                       <p className="text-xl leading-relaxed">
-                        {selectedPolitician.name} primarily serves the interests of the <strong>{dominantIndustry.industry}</strong> industry, 
+                        {selectedPolitician.name} primarily serves the interests of the <strong>{dominantIndustry.industry}</strong> industry,
                         which has contributed <strong>${dominantIndustry.amount.toLocaleString()}</strong> to their campaign.
                       </p>
-                      
+
                       <div className="mt-6 p-4 bg-primary/10 border-l-4 border-primary rounded-r-lg">
                         <h4 className="font-bold mb-2">What this means for you:</h4>
                         <p>
-                          Politicians often align their policy positions with their largest donors. 
-                          With significant funding from the {dominantIndustry.industry.toLowerCase()} sector, 
-                          {selectedPolitician.name}'s voting record and policy priorities are likely influenced 
+                          Politicians often align their policy positions with their largest donors.
+                          With significant funding from the {dominantIndustry.industry.toLowerCase()} sector,
+                          {selectedPolitician.name}'s voting record and policy priorities are likely influenced
                           by these financial relationships.
                         </p>
                       </div>
@@ -528,19 +537,19 @@ export default function Home() {
                         No significant donor data is available for {selectedPolitician.name} in the current election cycle.
                         This could be because they haven't reported donations yet, or because their campaign is just beginning.
                       </p>
-                      
+
                       <div className="mt-6 p-4 bg-gray-800/50 border-l-4 border-gray-500 rounded-r-lg">
                         <h4 className="font-bold mb-2">What this means:</h4>
                         <p>
-                          Without donor data, it's difficult to determine which industries might influence 
-                          {selectedPolitician.name}'s policy positions. Check back later as more campaign finance 
+                          Without donor data, it's difficult to determine which industries might influence
+                          {selectedPolitician.name}'s policy positions. Check back later as more campaign finance
                           data becomes available.
                         </p>
                       </div>
                     </div>
                   )}
-                  
-                  <a 
+
+                  <a
                     href={selectedPolitician.profileUrl}
                     target="_blank"
                     rel="noopener noreferrer"

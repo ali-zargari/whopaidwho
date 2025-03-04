@@ -7,44 +7,95 @@ let lastFetchTime = 0;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const showCandidates = searchParams.get("candidates") === "true";
+  
+  console.log(`Politicians API request - showCandidates: ${showCandidates}`);
+
   try {
     const now = Date.now();
     if (cachedPoliticians && now - lastFetchTime < CACHE_DURATION) {
+      console.log("Returning cached politicians data");
       return NextResponse.json({ politicians: cachedPoliticians });
     }
 
     const fecApiKey = process.env.OPENFEC_API_KEY || "your_api_key_here";
+    if (fecApiKey === "your_api_key_here") {
+      console.warn("Using placeholder API key - this will not work with the real API");
+    }
 
     // Determine the current election cycle (use current even year or previous even year)
     const currentYear = new Date().getFullYear();
     const cycle = currentYear % 2 === 0 ? currentYear : currentYear - 1;
+    console.log(`Using election cycle: ${cycle}`);
 
     // Helper to fetch all pages from the API
     async function fetchAllPages(url: string, transform: (item: any) => Politician): Promise<Politician[]> {
       let results: Politician[] = [];
       let page = 1;
       let hasMorePages = true;
+      
+      console.log(`Starting to fetch pages from: ${url.split('?')[0]}`);
+      
       while (hasMorePages) {
-        const response = await fetch(`${url}&page=${page}&per_page=100`);
-        if (!response.ok) {
-          console.warn(`Failed to fetch page ${page}:`, await response.text());
+        try {
+          console.log(`Fetching page ${page}...`);
+          const pageUrl = `${url}&page=${page}&per_page=100`;
+          
+          const response = await fetch(pageUrl);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Failed to fetch page ${page} (${response.status}):`, errorText);
+            break;
+          }
+          
+          const data = await response.json();
+          
+          if (!data.results || !Array.isArray(data.results)) {
+            console.error(`Invalid response format for page ${page}:`, JSON.stringify(data).substring(0, 200) + "...");
+            break;
+          }
+          
+          // Transform the data and filter out any items with missing or invalid candidate_id
+          const validResults = data.results
+            .filter((item: any) => item.candidate_id && typeof item.candidate_id === 'string')
+            .map(transform);
+          
+          console.log(`Page ${page}: Found ${data.results.length} raw results, ${validResults.length} valid politicians`);
+          
+          results = results.concat(validResults);
+          
+          // Check if there are more pages
+          hasMorePages = data.pagination && data.pagination.pages > page;
+          page++;
+          
+          // Safety limit to prevent infinite loops
+          if (page > 20) {
+            console.warn("Reached maximum page limit (20). Stopping pagination.");
+            break;
+          }
+        } catch (error) {
+          console.error(`Error fetching page ${page}:`, error);
           break;
         }
-        const data = await response.json();
-        results = results.concat(data.results.map(transform));
-        hasMorePages = data.pagination && data.pagination.pages > page;
-        page++;
       }
+      
+      console.log(`Completed fetching. Total politicians: ${results.length}`);
       return results;
     }
 
     // Fetch senators (office "S")
     const senateUrl = `https://api.open.fec.gov/v1/candidates/?api_key=${fecApiKey}&election_year=${cycle}&office=S&candidate_status=C`;
+    console.log("Fetching senators...");
     const senators = await fetchAllPages(senateUrl, candidate => transformCandidate(candidate, "Senator"));
+    console.log(`Fetched ${senators.length} senators`);
 
     // Fetch House candidates (office "H")
     const houseUrl = `https://api.open.fec.gov/v1/candidates/?api_key=${fecApiKey}&election_year=${cycle}&office=H&candidate_status=C`;
+    console.log("Fetching representatives...");
     const houseCandidates = await fetchAllPages(houseUrl, candidate => transformCandidate(candidate, "Representative"));
+    console.log(`Fetched ${houseCandidates.length} representatives`);
 
     // Deduplicate senators by candidate id (in case of duplicates)
     const senatorMap = new Map<string, Politician>();
@@ -72,6 +123,13 @@ export async function GET(request: NextRequest) {
       senatorCountsByState[s.state] = (senatorCountsByState[s.state] || 0) + 1;
     });
 
+    // Log some sample politicians to verify CIDs
+    console.log("Sample politicians with CIDs:");
+    const samplePoliticians = allMembers.slice(0, 5);
+    samplePoliticians.forEach(p => {
+      console.log(`- ${p.name} (${p.party}, ${p.state}): CID=${p.cid}`);
+    });
+
     return NextResponse.json({
       politicians: allMembers,
       stats: {
@@ -94,6 +152,13 @@ export async function GET(request: NextRequest) {
 // Transform candidate API data into our Politician type.
 // For representatives, we try to derive the district using candidate.district or office_full.
 function transformCandidate(candidate: any, position: string): Politician {
+  // Validate candidate_id exists and is in the expected format
+  if (!candidate.candidate_id) {
+    console.warn(`Missing candidate_id for ${candidate.name || 'unknown candidate'}`);
+  } else if (!/^[HSP][0-9A-Z]+$/.test(candidate.candidate_id.toUpperCase())) {
+    console.warn(`Unusual candidate_id format: ${candidate.candidate_id} for ${candidate.name || 'unknown candidate'}`);
+  }
+
   // Map FEC party codes to more readable values
   const partyMap: Record<string, string> = {
     "DEM": "Democrat",
@@ -113,17 +178,20 @@ function transformCandidate(candidate: any, position: string): Politician {
     }
   }
 
+  // Ensure candidate_id is properly formatted
+  const candidateId = candidate.candidate_id ? candidate.candidate_id.toUpperCase() : '';
+
   return {
-    id: candidate.candidate_id.toUpperCase(),
-    name: candidate.name,
-    cid: candidate.candidate_id.toUpperCase(),
+    id: candidateId,
+    name: candidate.name || 'Unknown Candidate',
+    cid: candidateId, // This is the critical field used for donor lookups
     party: partyMap[candidate.party] || candidate.party || "Other",
     state: candidate.state || "Unknown",
     position,
     isIncumbent: true, // Simplify by assuming all are active for UI purposes
     isCandidate: true, // Keep this true for compatibility with existing code
     district,
-    profileUrl: `https://www.fec.gov/data/candidate/${candidate.candidate_id.toUpperCase()}/`
+    profileUrl: candidateId ? `https://www.fec.gov/data/candidate/${candidateId}/` : '#'
   };
 }
 
