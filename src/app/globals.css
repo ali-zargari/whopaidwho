@@ -3738,13 +3738,18 @@ html {
 }
 
 .accountability-views {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 24px 0;
   border-bottom: 1px solid var(--line);
 }
 .accountability-views a {
-  flex: 1;
+  display: block;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  align-self: stretch;
   padding: 17px 20px;
   color: var(--muted);
   font-size: 14px;
@@ -3755,6 +3760,7 @@ html {
   color: var(--green);
   background: #edf4ef;
   font-weight: 600;
+  text-decoration: none;
 }
 .accountability-views span {
   display: block;

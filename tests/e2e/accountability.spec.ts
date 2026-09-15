@@ -111,6 +111,7 @@ test("accountability coverage, grouped penalties, comparison and mobile layouts 
     "/compare?cycle=2024&ids=H8TX02166,H2IL01281",
   ]) {
     await page.goto(path);
+    await page.evaluate(() => document.fonts.ready);
     expect(
       await page.evaluate(
         () =>
