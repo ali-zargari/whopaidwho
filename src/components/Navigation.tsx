@@ -28,6 +28,12 @@ export default function Navigation() {
         Compare
       </Link>
       <Link
+        href={`/accountability${suffix}`}
+        aria-current={pathname === "/accountability" ? "page" : undefined}
+      >
+        Accountability
+      </Link>
+      <Link
         href={`/methodology${suffix}`}
         aria-current={pathname === "/methodology" ? "page" : undefined}
       >

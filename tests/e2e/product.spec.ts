@@ -65,7 +65,9 @@ test("comparison selection survives search and produces a shareable same-cycle t
     "Bernard Sanders",
   );
   await expect(
-    page.locator(".comparison-table tbody tr").first(),
+    page
+      .locator(".comparison-table tbody tr")
+      .filter({ hasText: "Reported receipts" }),
   ).toContainText("$8,207,886.33");
 });
 test("comparison picker, remove, cycle switch and clear while searching", async ({

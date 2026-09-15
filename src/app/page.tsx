@@ -1,6 +1,7 @@
 import { ArrowUpRight, Database, Landmark, Users } from "lucide-react";
 import Link from "next/link";
 import Explorer from "@/components/Explorer";
+import { accountabilitySummary } from "@/lib/accountability";
 import {
   parseFilters,
   searchCandidates,
@@ -100,6 +101,9 @@ export default async function Home({
         result={result}
         cycles={CYCLES}
         currentCycle={currentCycle()}
+        accountability={Object.fromEntries(
+          result.candidates.map((c) => [c.id, accountabilitySummary(c.id)]),
+        )}
       />
       <section className="context-band">
         <span className="context-number">01 /</span>

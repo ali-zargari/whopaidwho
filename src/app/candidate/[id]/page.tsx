@@ -29,6 +29,7 @@ import {
   fecUrl,
 } from "@/lib/format";
 import ShareButton from "@/components/ShareButton";
+import AccountabilityPanel from "@/components/AccountabilityPanel";
 import FundingBreakdown from "@/components/FundingBreakdown";
 type Props = {
   params: Promise<{ id: string }>;
@@ -106,6 +107,7 @@ export default async function CandidatePage({ params, searchParams }: Props) {
           </Link>
         )}
       </div>
+      <AccountabilityPanel candidateId={c.id} name={c.name} cycle={cycle} />
       <div className="financial-stats">
         {[
           [

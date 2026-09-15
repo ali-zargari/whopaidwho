@@ -41,6 +41,7 @@ export default function RootLayout({
                   <Link href="/races">Current races</Link>
                   <Link href="/">Explore</Link>
                   <Link href="/compare">Compare</Link>
+                  <Link href="/accountability">Accountability</Link>
                   <Link href="/methodology">Our data</Link>
                 </nav>
               }
@@ -69,8 +70,9 @@ export default function RootLayout({
             </a>
           </div>
           <p>
-            Based on Federal Election Commission filings. Contributions alone do
-            not establish influence or wrongdoing.
+            Financial figures come from FEC filings. Accountability records
+            identify their sources and outcomes. Contributions alone do not
+            establish wrongdoing.
           </p>
         </footer>
       </body>

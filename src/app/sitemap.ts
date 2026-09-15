@@ -4,6 +4,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: "https://whopaidwho.com", changeFrequency: "weekly", priority: 1 },
     { url: "https://whopaidwho.com/methodology", priority: 0.5 },
+    { url: "https://whopaidwho.com/accountability", priority: 0.9 },
     { url: "https://whopaidwho.com/races", priority: 0.9 },
     ...CYCLES.flatMap((cycle) =>
       snapshot(cycle).candidates.map((c) => ({

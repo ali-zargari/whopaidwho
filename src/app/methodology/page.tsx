@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, ArrowUpRight, Database } from "lucide-react";
 import { snapshot, CYCLES } from "@/lib/data";
 import { date, number } from "@/lib/format";
+import { enforcement } from "@/lib/enforcement";
 export const metadata: Metadata = { title: "Sources & methodology" };
 export default function Methodology() {
   return (
@@ -30,7 +31,8 @@ export default function Methodology() {
           <a href="#records">04 · Committee records</a>
           <a href="#company-graph">05 · Company funding graph</a>
           <a href="#outside">06 · Outside & dark money</a>
-          <a href="#limits">07 · Limits & corrections</a>
+          <a href="#accountability">07 · Accountability records</a>
+          <a href="#limits">08 · Limits & corrections</a>
         </nav>
         <div className="methodology-content">
           <section id="sources">
@@ -287,8 +289,109 @@ export default function Methodology() {
               available through the links in each race.
             </p>
           </section>
+          <section id="accountability">
+            <span className="eyebrow">07 / ACCOUNTABILITY RECORDS</span>
+            <h2>Document the conduct. Include the outcome.</h2>
+            <p>
+              The FEC index applies the same matching procedure to all{" "}
+              {number(enforcement.candidatesChecked)} candidate IDs in the
+              imported snapshots. On {date(enforcement.downloadedAt)}, we
+              retrieved {number(enforcement.indexEntriesScanned)} index entries
+              covering {number(enforcement.casesScanned)} distinct published MUR
+              case numbers. Current and archived versions of the same number are
+              counted once. {number(enforcement.cases.length)} case numbers
+              matched {number(enforcement.candidatesMatched)} candidates’
+              campaigns.
+            </p>
+            <p>
+              Candidate–committee linkage and committee-master files for the
+              imported cycles supply principal and authorized committee IDs and
+              names. Case titles must match a complete committee name after
+              case, punctuation, and spacing normalization. We exclude names
+              shared by multiple committee IDs and committees linked to multiple
+              candidate IDs. The matched name must also be a respondent with a
+              disposition in the case page. There is no fuzzy matching or
+              name-based inference about individual candidates. The legal index
+              itself supplies names, not IDs.
+            </p>
+            <p>
+              This title-based lookup can miss secondary respondents, historical
+              or changed committee names, and archived cases without structured
+              respondents. {number(enforcement.candidatesWithCommitteeNames)} of{" "}
+              {number(enforcement.candidatesChecked)} candidates have committee
+              names available for matching. It excludes administrative fines,
+              alternative dispute resolution, unpublished matters, and non-FEC
+              proceedings. A zero result is a coverage-limited search, not
+              clearance.
+            </p>
+            <p>
+              The index reproduces respondent-level FEC disposition labels and
+              source document links without turning procedural steps into
+              findings of guilt. Only outcome groups containing the matched
+              campaign respondent are displayed. A penalty may be shared with
+              the listed treasurer or other respondents. Identical amounts for
+              the same respondent group across procedural stages are displayed
+              once; amounts across MUR numbers are never added. Joint Commission
+              action references are linked where identifiable. Multiple MUR
+              numbers can describe one proceeding, so counts do not measure
+              separate offenses or severity.
+            </p>
+            <p>
+              The supplementary reviewed collection is a small, manually
+              reviewed selection of public FEC enforcement files, congressional
+              ethics records, and criminal case records published by courts or
+              the Department of Justice. It covers campaign finance and broader
+              public-integrity matters. Selection reflects available source
+              review, not a representative sample or a completed background
+              check. Most candidates have not been reviewed; a missing entry
+              provides no conclusion about their conduct.
+            </p>
+            <p>
+              Each reviewed narrative is matched to an exact FEC candidate ID.
+              It identifies the person or committee actually involved, the
+              conduct period, authority, action date, current disposition in the
+              sources reviewed, and primary documents. A campaign’s penalty is
+              not automatically a penalty against the candidate personally.
+              Consolidated matters are one record; we do not multiply penalties
+              by complaint count.
+            </p>
+            <p>
+              Allegations and announced investigations are attributed and
+              labeled separately from charges, findings, civil settlements, and
+              convictions. Charges carry a presumption of innocence. Dismissals,
+              mitigating findings, and later changes such as sentence
+              commutations accompany the underlying conduct. A settlement’s
+              terms determine what was admitted; its label alone does not
+              establish a criminal offense.
+            </p>
+            <p>
+              Case records span years independently of the funding cycle. Badge
+              labels describe selected records, not scores. Funding shares, case
+              counts, and incomplete coverage cannot rank honesty or establish
+              corruption. The same source and labeling standards apply to every
+              candidate regardless of party.
+            </p>
+            <p>
+              “Sources reviewed” is the UTC review date, not a promise that the
+              record is complete or continuously monitored. Updates require a
+              new source review and publication. For corrections or a later
+              disposition,
+              <a
+                href="https://github.com/ali-zargari/whopaidwho/issues"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {" "}
+                submit the candidate ID, case number, and primary-source link ↗
+              </a>
+              . Previous published versions remain in the repository history.
+            </p>
+            <Link className="text-link" href="/accountability">
+              Browse investigations, findings & status definitions ↗
+            </Link>
+          </section>
           <section id="limits">
-            <span className="eyebrow">07 / LIMITS & CORRECTIONS</span>
+            <span className="eyebrow">08 / LIMITS & CORRECTIONS</span>
             <h2>Keep the original record in view.</h2>
             <p>
               Campaigns file on different schedules, reports can be amended, and
