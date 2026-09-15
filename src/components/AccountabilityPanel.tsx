@@ -7,7 +7,11 @@ import {
 } from "@/lib/accountability";
 import { date, money } from "@/lib/format";
 import { CYCLES, getCandidate } from "@/lib/data";
-import { candidateEnforcement, enforcement } from "@/lib/enforcement";
+import {
+  candidateEnforcement,
+  enforcement,
+  enforcementCoverage,
+} from "@/lib/enforcement";
 import EnforcementRecord from "./EnforcementRecord";
 
 export function CaseCard({
@@ -109,6 +113,7 @@ export default function AccountabilityPanel({
 }) {
   const cases = candidateCases(candidateId);
   const fec = candidateEnforcement(candidateId);
+  const coverage = enforcementCoverage(candidateId);
   return (
     <section
       className="accountability-panel"
@@ -123,9 +128,10 @@ export default function AccountabilityPanel({
         <FileSearch size={26} />
       </div>
       <p className="accountability-intro">
-        The same FEC committee-name lookup runs for every candidate, including{" "}
-        {name}. Records span years beyond the {cycle} funding cycle. Campaign
-        respondents and personal conduct are identified separately.
+        Accountability coverage for {name}. The same FEC matching rules apply to
+        every candidate in the indexed financial snapshots. Records span years
+        beyond the {cycle} funding cycle. Campaign respondents and personal
+        conduct are identified separately.
       </p>
       <p className="coverage-label">
         {enforcement.candidatesChecked.toLocaleString("en-US")} candidates
@@ -136,8 +142,10 @@ export default function AccountabilityPanel({
       <div className="accountability-subheading">
         <h3>FEC enforcement records</h3>
         <span>
-          {fec.length} linked case {fec.length === 1 ? "number" : "numbers"} ·
-          not a conduct score
+          {coverage === "available"
+            ? `${fec.length} linked case ${fec.length === 1 ? "number" : "numbers"}`
+            : "Matching not completed"}{" "}
+          · not a conduct score
         </span>
       </div>
       {fec.length ? (
@@ -164,13 +172,19 @@ export default function AccountabilityPanel({
       ) : (
         <div className="accountability-unreviewed">
           <strong>
-            No FEC case title matched this campaign’s linked committee names.
+            {coverage === "not-indexed"
+              ? "FEC matching has not been run for this registration."
+              : coverage === "names-unavailable"
+                ? "Linked committee names are unavailable in this index."
+                : "No FEC case title matched this campaign’s linked committee names."}
           </strong>
           <p>
+            {coverage === "not-indexed" &&
+              "This race registration has no financial profile in the snapshots used for the enforcement index. "}
             This search can miss secondary respondents, renamed committees,
             archived files, and personal cases. It does not cover every FEC
-            enforcement program, criminal court, or ethics investigation. No
-            match is not a clean bill of health.
+            enforcement program, criminal court, or ethics investigation.
+            Missing coverage or no match is not a clean bill of health.
           </p>
         </div>
       )}

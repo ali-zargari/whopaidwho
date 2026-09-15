@@ -252,6 +252,8 @@ def main():
     linked_candidates = {candidate for committee in links for candidate in links[committee] if names[committee]}
     matched_candidates = {m['candidateId'] for c in cases for m in c['matches']}
     snapshot = dict(schemaVersion=1, startedAt=started, downloadedAt=datetime.now(timezone.utc).isoformat(), source=INDEX, cycles=sorted(s['cycle'] for s in snapshots), candidatesChecked=len(candidates), candidatesWithCommitteeNames=len(linked_candidates), indexEntriesScanned=total, casesScanned=len(unique_entries), candidatesMatched=len(matched_candidates), ambiguousCommitteeNames=ambiguous, exclusions=exclusions, sources=sources, index=entries, cases=cases)
+    snapshot['checkedCandidateIds'] = sorted(candidates)
+    snapshot['candidateIdsWithCommitteeNames'] = sorted(linked_candidates)
     target = ROOT / 'src/data/accountability/fec-enforcement.json'
     target.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode='w', dir=target.parent, delete=False, encoding='utf-8') as temp:

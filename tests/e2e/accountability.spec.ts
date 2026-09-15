@@ -129,7 +129,13 @@ test("accountability coverage, grouped penalties, comparison and mobile layouts 
   );
   await page.goto("/candidate/H4NC02192?cycle=2026#accountability");
   await expect(page.locator(".accountability-panel")).toContainText(
-    "No match is not a clean bill of health",
+    "Missing coverage or no match is not a clean bill of health",
+  );
+  await page.goto(
+    "/races/house-OH-06?cycle=2024&candidate=H0OH06189#accountability",
+  );
+  await expect(page.locator(".accountability-panel")).toContainText(
+    "FEC matching has not been run for this registration.",
   );
   await page.goto("/methodology#accountability");
   await expect(

@@ -36,6 +36,8 @@ type EnforcementSnapshot = {
   cycles: number[];
   candidatesChecked: number;
   candidatesWithCommitteeNames: number;
+  checkedCandidateIds: string[];
+  candidateIdsWithCommitteeNames: string[];
   casesScanned: number;
   indexEntriesScanned: number;
   candidatesMatched: number;
@@ -46,6 +48,15 @@ type EnforcementSnapshot = {
   cases: EnforcementCase[];
 };
 export const enforcement = saved as EnforcementSnapshot;
+const checkedIds = new Set(enforcement.checkedCandidateIds);
+const namedIds = new Set(enforcement.candidateIdsWithCommitteeNames);
+export function enforcementCoverage(candidateId: string) {
+  return !checkedIds.has(candidateId)
+    ? "not-indexed"
+    : !namedIds.has(candidateId)
+      ? "names-unavailable"
+      : "available";
+}
 const byCandidate = new Map<string, EnforcementCase[]>();
 for (const record of enforcement.cases) {
   for (const id of new Set(record.matches.map((m) => m.candidateId))) {
