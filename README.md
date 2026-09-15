@@ -13,6 +13,8 @@ A campaign finance explorer for U.S. House and Senate candidates, built with Nex
 - Itemized/unitemized individual contributions only where source summaries agree.
 - Actual committee-reported transaction examples with original filing links, amendments, and memo notes.
 - Compare up to three candidates within one cycle; selections survive searches and pagination.
+- Accountability lookup across every imported candidate using the full FEC MUR title index, exact linked committee names, and respondent-level decisions.
+- Searchable official enforcement documents, shared-penalty context, and a supplementary collection of sourced investigations and outcomes.
 - CSV export of all matching financial summaries, with source and retrieval timestamps.
 - Responsive layouts, keyboard navigation, useful empty/error states, and a methodology section.
 
@@ -70,8 +72,28 @@ Dictionaries: [all candidates](https://www.fec.gov/campaign-finance-data/all-can
 
 ## Verify
 
+### Refresh accountability records
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r scripts/requirements.txt
+.venv/bin/python scripts/refresh-accountability.py
+```
+
+This scans every page of the public FEC MUR index, including archived entries, and checks **every candidate ID** in the saved financial snapshots under the same rules. CM and CCL bulk files supply principal/authorized committee links. A complete normalized case title must uniquely match a linked committee name, and the case page must confirm that name as a respondent with a disposition. Ambiguous names and candidates linked to the same committee are excluded. There are no fuzzy matches, personal-name matches, or politician-specific exceptions in this importer.
+
+The saved `src/data/accountability/fec-enforcement.json` includes the full title index, source URLs, UTC retrieval dates, hashes, coverage counts, excluded matches, and matched case documents. Schema, pagination, and validation failures preserve the previous snapshot. The optional `--cache-dir /path/to/cache` resumes a failed acquisition using the original source timestamps; omit it for a fresh refresh. A successful refresh still requires checks and deployment before it changes the website.
+
+**This is a title-based lookup, not complete enforcement coverage.** It misses secondary-only respondents, changed/historical names, unstructured archived cases, and personal-name matters. It does not include administrative fines, ADR, every court, or every congressional ethics record. Multiple MUR numbers can describe one proceeding. Identical source penalties for the same respondent group across stages display once; amounts across case numbers are never summed. Only outcome groups containing the matched campaign respondent appear on that candidate’s page. Document dates are not disposition dates.
+
+The supplementary narratives in `src/lib/accountability.ts` require manual primary-source review. They are independent of funding cycles and the automated FEC index; some overlap it. Verify the exact person/committee, latest outcome (including dismissals or clemency), limiting findings, source links, and UTC review date before publishing a change. Missing review is never a clean bill of health, and neither source counts nor funding percentages are corruption scores. The same criteria apply to all candidates. `data:refresh` does not update these narratives or the enforcement index.
+
+### Checks
+
 ```bash
 npm run check
+# With the Python dependencies installed, also verify ingestion:
+.venv/bin/python -m unittest discover -s tests -p '*_test.py'
 npx playwright install chromium
 npm run test:e2e
 ```

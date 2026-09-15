@@ -14,6 +14,8 @@ import {
   Scale,
 } from "lucide-react";
 import type { Candidate, Filters, SearchResult } from "@/lib/types";
+import AccountabilityBadge from "./AccountabilityBadge";
+import type { accountabilitySummary } from "@/lib/accountability";
 import { useComparison } from "./CompareProvider";
 import {
   coverage,
@@ -38,11 +40,13 @@ export default function Explorer({
   result,
   cycles,
   currentCycle,
+  accountability,
 }: {
   filters: Filters;
   result: SearchResult;
   cycles: number[];
   currentCycle: number;
+  accountability: Record<string, ReturnType<typeof accountabilitySummary>>;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -305,6 +309,11 @@ export default function Explorer({
                       <span> · </span>
                       {officeLabel(c)}
                     </p>
+                    <AccountabilityBadge
+                      candidateId={c.id}
+                      cycle={filters.cycle}
+                      summary={accountability[c.id]}
+                    />
                     <div className="card-money">
                       <span>Reported receipts</span>
                       <strong>{money(c.receipts, true)}</strong>

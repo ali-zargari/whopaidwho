@@ -13,6 +13,8 @@ import {
   STATES,
 } from "@/lib/format";
 import CycleSwitcher from "@/components/CycleSwitcher";
+import AccountabilityBadge from "@/components/AccountabilityBadge";
+import { accountabilitySummary } from "@/lib/accountability";
 import ComparePicker from "@/components/ComparePicker";
 export const metadata: Metadata = { title: "Compare campaign funding" };
 export default async function ComparePage({
@@ -113,6 +115,18 @@ export default async function ComparePage({
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <th scope="row">Accountability · source coverage</th>
+                {candidates.map((c) => (
+                  <td key={c.id}>
+                    <AccountabilityBadge
+                      candidateId={c.id}
+                      cycle={cycle}
+                      summary={accountabilitySummary(c.id)}
+                    />
+                  </td>
+                ))}
+              </tr>
               {metrics.map(([label, format]) => (
                 <tr key={label}>
                   <th scope="row">{label}</th>

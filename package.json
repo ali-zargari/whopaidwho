@@ -11,7 +11,9 @@
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "data:refresh": "python3 scripts/refresh-data.py",
-    "check": "npm run lint && npm run typecheck && npm test && npm run build"
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "data:accountability": "python3 scripts/refresh-accountability.py",
+    "test:ingest": "python3 -m unittest discover -s tests -p \"*_test.py\""
   },
   "dependencies": {
     "lucide-react": "^1.46.0",

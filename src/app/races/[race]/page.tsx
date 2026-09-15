@@ -13,6 +13,7 @@ import {
   partyName,
 } from "@/lib/format";
 import RaceControls from "@/components/RaceControls";
+import AccountabilityPanel from "@/components/AccountabilityPanel";
 import FundingMap from "@/components/FundingMap";
 type Props = {
   params: Promise<{ race: string }>;
@@ -91,6 +92,11 @@ export default async function RacePage({ params, searchParams }: Props) {
         candidate={registration.id}
         registrations={race.registrations}
         cycles={CYCLES}
+      />
+      <AccountabilityPanel
+        candidateId={registration.id}
+        name={registration.name}
+        cycle={fundingCycle}
       />
       <FundingMap
         key={`${registration.id}-${fundingCycle}`}
