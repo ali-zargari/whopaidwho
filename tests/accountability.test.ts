@@ -11,6 +11,7 @@ import {
   enforcement,
   candidateEnforcement,
   searchEnforcement,
+  enforcementCoverage,
 } from "../src/lib/enforcement";
 import { CYCLES, snapshot, getCandidate } from "../src/lib/data";
 
@@ -19,6 +20,9 @@ test("every imported candidate is covered by the same enforcement lookup and the
     CYCLES.flatMap((y) => snapshot(y).candidates.map((c) => c.id)),
   );
   assert.equal(enforcement.candidatesChecked, ids.size);
+  assert.deepEqual(new Set(enforcement.checkedCandidateIds), ids);
+  assert.equal(enforcementCoverage("H0OH06189"), "not-indexed");
+  assert.equal(enforcementCoverage("H4NC02192"), "names-unavailable");
   assert.equal(enforcement.index.length, enforcement.indexEntriesScanned);
   assert.equal(
     new Set(enforcement.index.map((c) => c.number)).size,

@@ -1,4 +1,4 @@
-import { candidateEnforcement } from "./enforcement";
+import { candidateEnforcement, enforcementCoverage } from "./enforcement";
 
 export const CASE_STATUSES = {
   settlement: {
@@ -272,6 +272,7 @@ export function candidateCases(candidateId: string) {
 export function accountabilitySummary(candidateId: string) {
   const cases = candidateCases(candidateId);
   const fec = candidateEnforcement(candidateId);
+  const coverage = enforcementCoverage(candidateId);
   const statuses = [...new Set(cases.map((c) => c.status))];
   const groups = fec.flatMap((c) =>
     c.dispositions.filter((d) => d.matchedCandidateIds.includes(candidateId)),
@@ -282,7 +283,11 @@ export function accountabilitySummary(candidateId: string) {
   return {
     label: fec.length
       ? `${fec.length} linked FEC campaign case ${fec.length === 1 ? "number" : "numbers"}`
-      : "No FEC committee-title match",
+      : coverage === "not-indexed"
+        ? "Not included in this FEC index"
+        : coverage === "names-unavailable"
+          ? "FEC committee names unavailable"
+          : "No FEC committee-title match",
     tone: "mixed",
     count: fec.length,
     detail: [
