@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Verification artifacts
+/test-results/
+/playwright-report/
+/.cache/
+*.tmp
+
+__pycache__/
+*.py[cod]

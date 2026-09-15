@@ -1,0 +1,65 @@
+export type Candidate = {
+  id: string;
+  name: string;
+  filedName: string;
+  status: string;
+  party: string;
+  office: string;
+  state: string;
+  district: string;
+  cycle: number;
+  electionYear: number | null;
+  registrationStatus: string | null;
+  principalCommitteeId: string | null;
+  receipts: number;
+  transfersIn: number;
+  disbursements: number;
+  transfersOut: number;
+  cash: number;
+  selfContributions: number;
+  candidateLoans: number;
+  otherLoans: number;
+  itemized: number | null;
+  unitemized: number | null;
+  debt: number;
+  individuals: number;
+  committees: number;
+  partyContributions: number;
+  coverageEnd: string | null;
+  coverageDateAnomaly?: boolean;
+  individualRefunds: number;
+  committeeRefunds: number;
+};
+export type Registration = {
+  id: string;
+  name: string;
+  party: string;
+  electionYear: number;
+  state: string;
+  office: string;
+  district: string;
+  status: string;
+};
+export type Snapshot = {
+  registrations: Registration[];
+  cycle: number;
+  downloadedAt: string;
+  source: string;
+  sha256: string;
+  candidates: Candidate[];
+};
+export type Filters = {
+  q: string;
+  cycle: number;
+  office: string;
+  party: string;
+  state: string;
+  sort: string;
+  page: number;
+};
+export type SearchResult = {
+  candidates: Candidate[];
+  total: number;
+  pages: number;
+  page: number;
+};
