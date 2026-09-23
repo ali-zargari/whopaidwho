@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CYCLES, filteredCandidates, parseFilters, snapshot } from "@/lib/data";
 import { csvCell } from "@/lib/csv";
+import { outsideOverview } from "@/lib/influence";
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   if (params.has("cycle") && !CYCLES.includes(Number(params.get("cycle"))))
@@ -11,6 +12,10 @@ export async function GET(request: NextRequest) {
   const filters = parseFilters(params);
   const all = filteredCandidates(filters);
   const data = snapshot(filters.cycle);
+  const { outside, outsideDownloadedAt } = await outsideOverview(
+    all.map((candidate) => candidate.id),
+    filters.cycle,
+  );
   const headers = [
     "candidate_id",
     "name",
@@ -34,6 +39,11 @@ export async function GET(request: NextRequest) {
     "transfers_out",
     "individual_refunds",
     "committee_refunds",
+    "outside_spending_status",
+    "outside_support",
+    "outside_oppose",
+    "outside_source",
+    "outside_downloaded_at",
     "source",
     "downloaded_at",
   ];
@@ -61,6 +71,11 @@ export async function GET(request: NextRequest) {
       c.transfersOut,
       c.individualRefunds,
       c.committeeRefunds,
+      outside[c.id].status,
+      outside[c.id].support,
+      outside[c.id].oppose,
+      outside[c.id].sourceUrl,
+      outsideDownloadedAt,
       data.source,
       data.downloadedAt,
     ]

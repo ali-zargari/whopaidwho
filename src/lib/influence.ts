@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { CYCLES } from "./data";
+import type { OutsideOverview } from "./types";
 
 export type OutsideSpender = {
   id: string;
@@ -159,6 +160,32 @@ export function outsideSourceUrl(
   });
   if (committeeId) params.set("committee_id", committeeId);
   return `https://www.fec.gov/data/independent-expenditures/?${params}`;
+}
+/**
+ * Compact, factual outside-spending fields for catalog entries. This reads one
+ * outside snapshot per cycle and deliberately does not load affiliations or
+ * funding-link data.
+ */
+export async function outsideOverview(candidateIds: string[], cycle: number) {
+  const data = await outsideSnapshot(cycle);
+  const outside: Record<string, OutsideOverview> = {};
+  for (const id of candidateIds) {
+    const record = data.candidates[id];
+    outside[id] = record
+      ? {
+          status: record.status,
+          support: record.support,
+          oppose: record.oppose,
+          sourceUrl: outsideSourceUrl(id, cycle),
+        }
+      : {
+          status: "not-indexed",
+          support: null,
+          oppose: null,
+          sourceUrl: outsideSourceUrl(id, cycle),
+        };
+  }
+  return { outside, outsideDownloadedAt: data.downloadedAt };
 }
 export function affiliationSourceUrl(
   committeeIds: string[],

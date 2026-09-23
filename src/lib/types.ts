@@ -63,3 +63,9 @@ export type SearchResult = {
   pages: number;
   page: number;
 };
+export type OutsideOverview = {
+  status: "reported" | "no-reported-spending" | "not-indexed";
+  support: number | null;
+  oppose: number | null;
+  sourceUrl: string;
+};

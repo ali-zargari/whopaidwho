@@ -13,20 +13,20 @@ import {
   Download,
   Scale,
 } from "lucide-react";
-import type { Candidate, Filters, SearchResult } from "@/lib/types";
+import type { Candidate, Filters, SearchResult, OutsideOverview } from "@/lib/types";
+import CandidateFundingSummary from "./CandidateFundingSummary";
 import AccountabilityBadge from "./AccountabilityBadge";
 import type { accountabilitySummary } from "@/lib/accountability";
 import { useComparison } from "./CompareProvider";
 import {
   coverage,
-  money,
+  date,
   number,
   partyName,
   partyClass,
   initials,
   STATES,
   officeLabel,
-  contributionTotal,
 } from "@/lib/format";
 function url(filters: Filters) {
   const p = new URLSearchParams();
@@ -41,12 +41,16 @@ export default function Explorer({
   cycles,
   currentCycle,
   accountability,
+  outside,
+  outsideDownloadedAt,
 }: {
   filters: Filters;
   result: SearchResult;
   cycles: number[];
   currentCycle: number;
   accountability: Record<string, ReturnType<typeof accountabilitySummary>>;
+  outside: Record<string, OutsideOverview>;
+  outsideDownloadedAt: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -238,20 +242,22 @@ export default function Explorer({
               {filters.q && <span>for “{filters.q}”</span>}
               {pending && <span className="loading-label"> · Updating…</span>}
             </p>
-            <div className="sort-control">
-              <label htmlFor="sort">Sort by</label>
-              <select
-                disabled={pending}
-                id="sort"
-                value={draft.sort}
-                onChange={(e) => apply({ sort: e.target.value })}
-              >
-                <option value="receipts">Most receipts</option>
-                <option value="cash">Most cash on hand</option>
-                <option value="committees">Committee contributions</option>
-                <option value="name">Name A–Z</option>
-              </select>
-            </div>
+            <span className="directory-order">Name A–Z</span>
+          </div>
+          <div className="overview-explainer">
+            <strong>The campaign account is only one part of the picture.</strong>
+            <p>
+              Each card shows campaign receipts alongside reported independent
+              spending to support or oppose the candidate. These are separate
+              measures, with separate reporting timelines.
+            </p>
+            <p>
+              “Individuals” includes both small and large personal donations;
+              it does not mean grassroots. Original donors behind outside
+              groups may be undisclosed.{" "}
+              <Link href="/methodology#outside">Read the scope & sources ↗</Link>
+            </p>
+            <span>Outside filings retrieved {date(outsideDownloadedAt)} · Recent 24/48-hour notices may not yet appear.</span>
           </div>
           {result.total === 0 ? (
             <div className="empty-state">
@@ -266,19 +272,7 @@ export default function Explorer({
             </div>
           ) : (
             <div className={`candidate-grid ${pending ? "is-pending" : ""}`}>
-              {result.candidates.map((c, i) => {
-                const total = contributionTotal(c);
-                const canChart =
-                  total > 0 &&
-                  [
-                    c.individuals,
-                    c.committees,
-                    c.partyContributions,
-                    c.selfContributions,
-                  ].every((v) => v >= 0);
-                const individualShare = canChart
-                  ? (c.individuals / total) * 100
-                  : 0;
+              {result.candidates.map((c) => {
                 const picked = selected.some((s) => s.id === c.id);
                 return (
                   <article className="candidate-card" key={c.id}>
@@ -289,12 +283,7 @@ export default function Explorer({
                       <span className={`party-badge ${partyClass(c.party)}`}>
                         {partyName(c.party)}
                       </span>
-                      <span className="card-rank">
-                        {String((result.page - 1) * 24 + i + 1).padStart(
-                          2,
-                          "0",
-                        )}
-                      </span>
+                      <span className="card-period">{filters.cycle - 1}–{filters.cycle}</span>
                     </div>
                     <Link
                       className="candidate-title"
@@ -314,26 +303,11 @@ export default function Explorer({
                       cycle={filters.cycle}
                       summary={accountability[c.id]}
                     />
-                    <div className="card-money">
-                      <span>Reported receipts</span>
-                      <strong>{money(c.receipts, true)}</strong>
-                    </div>
-                    <div className="funding-track" aria-hidden="true">
-                      <span style={{ width: `${individualShare}%` }} />
-                    </div>
-                    <div className="funding-caption">
-                      <span>
-                        <i />
-                        Individuals
-                      </span>
-                      <span>
-                        {canChart
-                          ? `${Math.round(individualShare)}% of contributions`
-                          : total === 0
-                            ? "No contributions reported"
-                            : "Signed adjustments — see profile"}
-                      </span>
-                    </div>
+                    <CandidateFundingSummary
+                      candidate={c}
+                      outside={outside[c.id]}
+                      outsideDownloadedAt={outsideDownloadedAt}
+                    />
                     <div className="card-footer">
                       <span>{coverage(c)}</span>
                       <button

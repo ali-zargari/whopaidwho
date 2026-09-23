@@ -33,11 +33,9 @@ export function parseFilters(params: URLSearchParams): Filters {
       params.get("state") && STATES[params.get("state")!]
         ? params.get("state")!
         : "",
-    sort: ["receipts", "cash", "name", "committees"].includes(
-      params.get("sort") || "",
-    )
-      ? params.get("sort")!
-      : "receipts",
+    // This catalog is navigation, so every legacy or unsupported sort is
+    // normalized to the neutral alphabetical order.
+    sort: "name",
     page: Math.max(
       1,
       Math.min(10000, Math.floor(Number(params.get("page"))) || 1),
@@ -61,13 +59,7 @@ export function filteredCandidates(filters: Filters): Candidate[] {
             .includes(term),
         ),
     )
-    .sort((a, b) =>
-      filters.sort === "name"
-        ? a.name.localeCompare(b.name)
-        : b[filters.sort as "receipts" | "cash" | "committees"] -
-            a[filters.sort as "receipts" | "cash" | "committees"] ||
-          a.id.localeCompare(b.id),
-    );
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 export function searchCandidates(filters: Filters) {
   const all = filteredCandidates(filters);

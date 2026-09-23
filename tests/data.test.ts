@@ -30,7 +30,7 @@ test("invalid filters are bounded and unsupported snapshots cannot silently fall
     ),
   );
   assert.equal(f.cycle, DEFAULT_CYCLE);
-  assert.equal(f.sort, "receipts");
+  assert.equal(f.sort, "name");
   assert.equal(f.state, "");
   assert.equal(f.page, 10000);
   assert.throws(() => snapshot(9999), RangeError);
@@ -95,12 +95,18 @@ test("zero, negative corrections and absent districts are not silently rewritten
   assert.ok(contributionTotal(c) < 0);
   assert.match(officeLabel({ ...c, district: "" }), /not reported/);
 });
-test("sorting is stable, numeric and does not mutate source data", () => {
+test("catalog sorting is alphabetical, stable, and does not mutate source data", () => {
   const f = parseFilters(new URLSearchParams("cycle=2026&sort=committees"));
   const all = filteredCandidates(f);
   assert.ok(
-    all.every((c, i) => i === 0 || all[i - 1].committees >= c.committees),
+    all.every(
+      (c, i) =>
+        i === 0 ||
+        all[i - 1].name.localeCompare(c.name) < 0 ||
+        (all[i - 1].name === c.name && all[i - 1].id.localeCompare(c.id) <= 0),
+    ),
   );
+  assert.equal(f.sort, "name");
   assert.equal(snapshot(2026).candidates[0].id, "S8GA00180");
 });
 test("committee records are bounded, tied to cycle, never combined into totals", async () => {
