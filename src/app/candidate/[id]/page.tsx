@@ -31,6 +31,10 @@ import {
 import ShareButton from "@/components/ShareButton";
 import AccountabilityPanel from "@/components/AccountabilityPanel";
 import FundingBreakdown from "@/components/FundingBreakdown";
+import OutsideSpending from "@/components/OutsideSpending";
+import FundingTransparency from "@/components/FundingTransparency";
+import DonorAffiliations from "@/components/DonorAffiliations";
+import { candidateInfluence } from "@/lib/influence";
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -54,7 +58,10 @@ export default async function CandidatePage({ params, searchParams }: Props) {
   const { cycle } = parseFilters(toParams(await searchParams));
   const c = getCandidate(id, cycle);
   if (!c) notFound();
-  const records = await committeeRecords(id, cycle);
+  const [records, influence] = await Promise.all([
+    committeeRecords(id, cycle),
+    candidateInfluence(id, cycle),
+  ]);
   const data = snapshot(cycle);
   const alternate = CYCLES.find((y) => y !== cycle && getCandidate(id, y));
   const other = alternate ? getCandidate(id, alternate) : undefined;
@@ -107,6 +114,17 @@ export default async function CandidatePage({ params, searchParams }: Props) {
           </Link>
         )}
       </div>
+      <nav
+        className="profile-section-links"
+        aria-label="Candidate financial sections"
+      >
+        <a href="#outside-spending">Outside spending</a>
+        <a href="#funding-transparency">Funding behind the groups</a>
+        <a href="#donor-affiliations">Individual donor affiliations</a>
+      </nav>
+      <OutsideSpending name={c.name} candidate={c} data={influence} />
+      <FundingTransparency data={influence} />
+      <DonorAffiliations data={influence} />
       <AccountabilityPanel candidateId={c.id} name={c.name} cycle={cycle} />
       <div className="financial-stats">
         {[

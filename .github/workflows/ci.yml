@@ -1,7 +1,7 @@
 name: Verify product
 on:
   push:
-    branches: [master, "codex/**"]
+    branches: [master, "codex/**", dark-money]
   pull_request:
 permissions:
   contents: read

@@ -1,16 +1,9 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
-import {
-  ArrowUpRight,
-  Network,
-  Table2,
-  Building2,
-  Info,
-  ShieldQuestion,
-} from "lucide-react";
+import { ArrowUpRight, Network, Table2, Building2, Info } from "lucide-react";
 import type { Candidate, Registration } from "@/lib/types";
-import type { CommitteeRecord, OutsideRecord } from "@/lib/records";
+import type { CommitteeRecord } from "@/lib/records";
 import { usableExample } from "@/lib/record-examples";
 import { brands } from "@/lib/brands";
 import {
@@ -24,16 +17,12 @@ export default function FundingMap({
   candidate,
   registration,
   corporateRecords,
-  outsideRecords,
   cycle,
-  source,
 }: {
   candidate: Candidate | null;
   registration: Registration;
   corporateRecords: CommitteeRecord[];
-  outsideRecords: OutsideRecord[];
   cycle: number;
-  source: string;
 }) {
   const [view, setView] = useState<"map" | "table">("map");
   const [selected, setSelected] = useState<CommitteeRecord | null>(null);
@@ -396,89 +385,6 @@ export default function FundingMap({
           contributions.{" "}
           <a href="/methodology#company-graph">Graph methodology ↗</a>
         </p>
-      </section>
-      <section className="outside-panel" id="outside-spending">
-        <div className="outside-heading">
-          <ShieldQuestion size={29} />
-          <div>
-            <span className="eyebrow">A DIFFERENT MONEY TRAIL</span>
-            <h2>Outside spending & dark money</h2>
-          </div>
-          <span className="unknown-badge">Original donors: not determined</span>
-        </div>
-        <p>
-          Independent expenditures support or oppose a candidate. This money is
-          spent outside the campaign and is not paid to the candidate. These
-          examples do not measure a “dark money” total.
-        </p>
-        <div className="outside-records">
-          {outsideRecords
-            .filter(usableExample)
-            .slice(0, 6)
-            .map((r) => (
-              <a
-                className="outside-node"
-                key={r.id}
-                href={`https://www.fec.gov/data/filings/?file_number=${r.fileNumber}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span className={`stance ${r.stance}`}>
-                  {r.stance === "support" ? "Supports" : "Opposes"}{" "}
-                  {registration.name}
-                </span>
-                <strong>{r.name}</strong>
-                <div>
-                  <b>{money(r.amount)}</b>
-                  <ArrowUpRight size={16} />
-                </div>
-                <span>
-                  Single record · {date(r.date)}
-                  {r.isMemo ? " · Memo" : ""}
-                  {r.amendment === "A" ? " · Amended" : ""}
-                  {r.amount < 0 ? " · Adjustment" : ""}
-                </span>
-              </a>
-            ))}
-        </div>
-        {!outsideRecords.some(usableExample) && (
-          <div className="outside-empty">
-            No matching outside-spending examples in this snapshot.{" "}
-            <strong>This is not a finding of zero outside spending.</strong>
-          </div>
-        )}
-        <details className="dark-money-disclaimer" open>
-          <summary>What this can—and cannot—tell you about dark money</summary>
-          <p>
-            Some outside groups may receive funds whose original donors cannot
-            be identified from these public records. Outside spending is not
-            automatically dark money; a Super PAC or nonprofit label alone does
-            not prove undisclosed funding. We do not classify donors’ disclosure
-            status or estimate a hidden-dollar amount.
-          </p>
-          <p>
-            Amounts above are the latest dated example per spender and
-            support/oppose position, not cumulative totals. Latest nonpositive
-            or explicitly voided records are omitted without substituting older
-            records. Amendments and memo entries are retained, not fully
-            reconciled.{" "}
-            <a href="/methodology#outside">Read the disclosure limits ↗</a>
-          </p>
-        </details>
-        <div className="outside-links">
-          <a
-            href={`https://www.fec.gov/data/independent-expenditures/?data_type=processed&candidate_id=${registration.id}&cycle=${cycle}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Explore FEC outside-spending records
-            <ArrowUpRight size={14} />
-          </a>
-          <a href={source}>
-            Download source data
-            <ArrowUpRight size={14} />
-          </a>
-        </div>
       </section>
     </>
   );

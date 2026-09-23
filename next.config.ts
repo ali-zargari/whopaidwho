@@ -4,7 +4,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   outputFileTracingIncludes: {
-    "/*": ["./src/data/fec/committee-records-*.json"],
+    "/*": [
+      "./src/data/fec/committee-records-*.json",
+      "./src/data/influence/*.json",
+    ],
   },
   async headers() {
     return [

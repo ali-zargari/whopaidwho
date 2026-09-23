@@ -15,6 +15,10 @@ import {
 import RaceControls from "@/components/RaceControls";
 import AccountabilityPanel from "@/components/AccountabilityPanel";
 import FundingMap from "@/components/FundingMap";
+import OutsideSpending from "@/components/OutsideSpending";
+import FundingTransparency from "@/components/FundingTransparency";
+import DonorAffiliations from "@/components/DonorAffiliations";
+import { candidateInfluence } from "@/lib/influence";
 type Props = {
   params: Promise<{ race: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -45,7 +49,10 @@ export default async function RacePage({ params, searchParams }: Props) {
     race.registrations.find((r) => r.id === query.get("candidate")) ||
     race.registrations[0];
   const candidate = getCandidate(registration.id, fundingCycle) || null;
-  const records = await committeeRecords(registration.id, fundingCycle);
+  const [records, influence] = await Promise.all([
+    committeeRecords(registration.id, fundingCycle),
+    candidateInfluence(registration.id, fundingCycle),
+  ]);
   return (
     <main id="main" className="page-shell race-detail">
       <Link href={`/races?cycle=${cycle}`} className="back-link">
@@ -103,10 +110,15 @@ export default async function RacePage({ params, searchParams }: Props) {
         candidate={candidate}
         registration={registration}
         corporateRecords={records.corporateRecords || []}
-        outsideRecords={records.outsideRecords || []}
         cycle={fundingCycle}
-        source={records.source}
       />
+      <OutsideSpending
+        name={registration.name}
+        candidate={candidate}
+        data={influence}
+      />
+      <FundingTransparency data={influence} />
+      <DonorAffiliations data={influence} />
       <section className="panel race-roster">
         <div className="panel-title">
           <div>
