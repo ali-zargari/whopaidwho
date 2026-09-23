@@ -189,11 +189,11 @@ test("race filters, branded graph, source inspection and historical funding cycl
   ).toHaveAttribute("href", /file_number=\d+/);
   await page.getByRole("tab", { name: "Table", exact: true }).click();
   await expect(page.getByRole("table").first()).toContainText("Individuals");
+  await expect(page.locator(".dark-money-disclaimer")).toContainText(
+    "Original donors: not determined",
+  );
   await expect(
-    page.getByText("Original donors: not determined", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.locator(".outside-records .outside-node").first(),
+    page.locator(".outside-network .outside-group-node").first(),
   ).toBeVisible();
   await expect(page.locator(".dark-money-disclaimer")).toContainText(
     "not automatically dark money",

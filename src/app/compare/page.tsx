@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight, Scale, X } from "lucide-react";
 import { getCandidate, parseFilters, toParams, CYCLES } from "@/lib/data";
 import {
   coverage,
+  date,
   money,
   partyClass,
   partyName,
@@ -16,6 +17,7 @@ import CycleSwitcher from "@/components/CycleSwitcher";
 import AccountabilityBadge from "@/components/AccountabilityBadge";
 import { accountabilitySummary } from "@/lib/accountability";
 import ComparePicker from "@/components/ComparePicker";
+import { outsideSnapshot } from "@/lib/influence";
 export const metadata: Metadata = { title: "Compare campaign funding" };
 export default async function ComparePage({
   searchParams,
@@ -31,6 +33,7 @@ export default async function ComparePage({
     .map((id) => getCandidate(id, cycle))
     .filter((c) => c !== undefined);
   const ids = candidates.map((c) => c.id);
+  const outside = await outsideSnapshot(cycle);
   const metrics: [string, (c: (typeof candidates)[number]) => string][] = [
     ["Reported receipts", (c) => money(c.receipts)],
     ["Reported spending", (c) => money(c.disbursements)],
@@ -44,6 +47,29 @@ export default async function ComparePage({
     ["Candidate loans", (c) => money(c.candidateLoans)],
     ["Transfers from authorized committees", (c) => money(c.transfersIn)],
     ["Reporting coverage end", (c) => coverage(c)],
+    [
+      "Outside spending supporting candidate",
+      (c) => {
+        const record = outside.candidates[c.id];
+        return record
+          ? record.status === "no-reported-spending"
+            ? "No processed match"
+            : money(record.support)
+          : "Not indexed";
+      },
+    ],
+    [
+      "Outside spending opposing candidate",
+      (c) => {
+        const record = outside.candidates[c.id];
+        return record
+          ? record.status === "no-reported-spending"
+            ? "No processed match"
+            : money(record.oppose)
+          : "Not indexed";
+      },
+    ],
+    ["Outside spending snapshot retrieved", () => date(outside.downloadedAt)],
   ];
   return (
     <main id="main" className="page-shell compare-page">
@@ -156,7 +182,10 @@ export default async function ComparePage({
           Contributions exclude loans and transfers. Reported receipts and
           spending can include transfers between authorized committees. These
           are campaign finances, not personal wealth or a measure of political
-          influence. <Link href="/methodology">Read our methodology ↗</Link>
+          influence. <Link href="/methodology">Read our methodology ↗</Link>{" "}
+          Outside spending is paid by independent groups and is separate from
+          campaign receipts. Totals cover processed periodic filings, excluding
+          recent 24/48-hour notices.
         </p>
       </div>
     </main>

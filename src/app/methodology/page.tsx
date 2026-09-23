@@ -30,7 +30,9 @@ export default function Methodology() {
           <a href="#definitions">03 · Reading the numbers</a>
           <a href="#records">04 · Committee records</a>
           <a href="#company-graph">05 · Company funding graph</a>
-          <a href="#outside">06 · Outside & dark money</a>
+          <a href="#outside">06 · Outside spending</a>
+          <a href="#funding-links">06a · Funding & dark money</a>
+          <a href="#affiliations">06b · Donor affiliations</a>
           <a href="#accountability">07 · Accountability records</a>
           <a href="#limits">08 · Limits & corrections</a>
         </nav>
@@ -253,40 +255,139 @@ export default function Methodology() {
             <span className="eyebrow">06 / OUTSIDE SPENDING & DARK MONEY</span>
             <h2>Some funding trails stop before the original donor.</h2>
             <p>
-              Outside-spending examples use the same FEC committee-to-candidate
-              bulk file, with types 24E (support) and 24A (oppose). The filer
-              committee is the spender, and the candidate ID identifies the
-              target, not a recipient of campaign funds. We keep the latest
-              dated example per spender and support/oppose position, bounded to
-              eight records; the race page shows up to six, excluding latest
-              nonpositive or explicitly voided records without falling back to
-              older positive records. Date filters, exact-duplicate removal,
-              memo flags, and amendments follow the same approach as committee
-              examples.
+              Outside-spending totals use the FEC’s processed
+              candidate-and-spender aggregates for the selected two-year
+              reporting period. These include periodic Schedule E and
+              noncommittee Form 5 spending. Support and opposition are separate
+              signed amounts. Summed spender amounts reconcile to each
+              candidate’s support and opposition totals from the FEC’s separate
+              candidate-total endpoint.
             </p>
             <p>
-              These records are not summed. They are not complete spending
-              totals or an amendment-resolved ledger. Support and opposition
-              remain separate; outside spending is never added to campaign
-              contributions.
+              The FEC excludes 24/48-hour notices from these aggregates to avoid
+              counting spending again when it appears on a periodic report.
+              Recent spending can therefore be missing until the periodic filing
+              is processed. Retrieval time is not a common reporting cutoff, and
+              a 2026 reporting cycle is 2025–2026, not a senator’s six-year
+              election period. Rows without a candidate ID or usable
+              support/oppose label cannot be attributed and remain in the
+              downloadable source audit.
             </p>
             <p>
-              “Dark money” generally concerns spending whose original funders
-              are not disclosed or readily identifiable. We show original-donor
-              visibility as not determined. A Super PAC, nonprofit, or missing
-              donor match alone is not enough to label funding dark. These
-              snapshots do not trace every upstream contribution, nonprofit
-              transfer, electioneering communication, or beneficial owner, so we
-              do not publish a dark-money dollar estimate.
+              These amounts stay outside the campaign’s finances. We never add
+              them to contributions or subtract opposition from support. The map
+              shows up to four leading positive spenders per position; the full
+              expandable table preserves signed adjustments. A missing processed
+              match does not establish that no spending occurred. Issue ads and
+              other activity outside these disclosures are not measured.
             </p>
             <p>
-              Some nonprofit contributor identities are not part of public
-              tax-return disclosure.{" "}
+              <a href="https://api.open.fec.gov/developers/">
+                OpenFEC data documentation ↗
+              </a>
+              {" · "}
+              <a href="https://www.fec.gov/help-candidates-and-committees/making-independent-expenditures/">
+                FEC independent-expenditure reporting ↗
+              </a>
+            </p>
+          </section>
+          <section id="funding-links">
+            <span className="eyebrow">06A / FUNDING BEHIND OUTSIDE GROUPS</span>
+            <h2>
+              A disclosed organization can still obscure the original donor.
+            </h2>
+            <p>
+              We search processed Schedule A and Form 5 receipts of $1 million
+              or more per transaction in each reporting cycle, then match
+              receiving committee IDs to every outside spender. Only
+              affirmatively coded organization or committee records are
+              included; individuals and memo entries are excluded. This is a
+              uniform, limited view of large receipts, not a complete donor
+              list. Smaller receipts and refunds paid out are not included.
+              Contributions, transfers, loans and other receipts remain labeled
+              separately using the filing category.
+            </p>
+            <p>
+              A displayed receipt belongs to the outside group. It is not
+              assigned to a candidate, even when that group supported or opposed
+              the candidate. Money can finance several races or other
+              activities. Repeated appearances of a receipt across candidate
+              profiles must not be summed. Group receipts and independent
+              expenditures are different stages in the funding chain, not
+              additive amounts.
+            </p>
+            <p>
+              Nonprofit labels require an exact normalized full-name match, the
+              same state and ZIP code, and a unique EIN in the IRS Exempt
+              Organizations Business Master File. Current registry status is
+              context, not proof of status at the historical transaction date.
+              Unmatched names stay unclassified. The source and EIN are included
+              with each match; a nonprofit label alone does not establish that
+              its original donors are undisclosed elsewhere.
+            </p>
+            <p>
+              Original donor visibility remains not determined. Some nonprofit
+              donor identities are excluded from public tax-return disclosure,
+              but this does not make every nonprofit receipt or Super PAC dollar
+              dark money. We publish documented links and disclosure limits,
+              without estimating a candidate-specific hidden-money amount.
+            </p>
+            <p>
+              <a href="https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf">
+                IRS nonprofit register ↗
+              </a>
+              {" · "}
               <a href="https://www.irs.gov/charities-non-profits/public-disclosure-and-availability-of-exempt-organizations-returns-and-applications-contributors-identities-not-subject-to-disclosure">
-                IRS disclosure explanation ↗
-              </a>{" "}
-              Outside-spending source records and dated original filings remain
-              available through the links in each race.
+                IRS donor disclosure explanation ↗
+              </a>
+            </p>
+          </section>
+          <section id="affiliations">
+            <span className="eyebrow">06B / INDIVIDUAL DONOR AFFILIATIONS</span>
+            <h2>Personal contributions, with professional context.</h2>
+            <p>
+              The FEC individual-contribution bulk file contains a subset of
+              itemized giving. We match principal and authorized campaign
+              committees by FEC ID and exclude ambiguous committee links. Only
+              confirmed individual entities with direct or earmarked receipt
+              types 15 or 15E enter the tables. Candidate self-contributions,
+              intermediary forwarding records, other transaction categories and
+              refunds are excluded. Negative adjustments on included receipts
+              remain signed. Memo rows follow the FEC’s bulk-file guidance.
+            </p>
+            <p>
+              We group the reported employer and occupation text after case and
+              whitespace normalization. We do not merge corporate families or
+              verify employment, executive status or lobbyist registration.
+              Employer and occupation are two views of the same contributions,
+              not amounts to add together. Company employees’ personal donations
+              remain individual contributions, not corporate treasury giving.
+            </p>
+            <p>
+              The interface shows the top ten reported labels, with explicit
+              amounts for other values and missing information; the data
+              download retains the top twenty. Counts describe transaction
+              records, not unique people. Unitemized giving has no affiliation
+              breakdown here, and does not establish grassroots support.
+              Transaction dates are dates of included records, not complete
+              campaign coverage dates.
+            </p>
+            <p>
+              These tables describe the eligible published bulk subset and do
+              not reconcile to all individual contributions or all refunds.
+              Source hashes, inclusion rules and exclusions are saved with the
+              datasets. Original records remain authoritative.
+            </p>
+            <p>
+              <a href="https://www.fec.gov/campaign-finance-data/contributions-individuals-file-description/">
+                FEC individual contribution file definition ↗
+              </a>
+            </p>
+            <p>
+              Joint-fundraising attribution memo records (type 15J) are not
+              present in this bulk extract. A committee’s recorded activity can
+              span a candidate’s changes of office; affiliations describe the
+              linked committee’s records, not a verified allocation by office.
             </p>
           </section>
           <section id="accountability">

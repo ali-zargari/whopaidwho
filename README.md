@@ -8,7 +8,9 @@ A campaign finance explorer for U.S. House and Senate candidates, built with Nex
 - Search by candidate name, state, or FEC ID; filter office, party, and state.
 - Current Races from FEC election registrations, with candidate funding maps across cycles.
 - Branded company-connected PAC examples, proportional funding categories, and a table alternative.
-- Separate support/oppose outside-spending examples and explicit limits on original-donor visibility.
+- Processed outside-spending totals, separate support/oppose graphs and exact spender tables, including noncommittee Form 5 filings.
+- Large upstream organization receipts with filing evidence and conservative IRS nonprofit matches.
+- Personal donor employer/occupation breakdowns, with missing information, source dates and explicit subset coverage.
 - Profiles with receipts, contributions, cash, debt, loans, transfers, refunds, and reporting dates.
 - Itemized/unitemized individual contributions only where source summaries agree.
 - Actual committee-reported transaction examples with original filing links, amendments, and memo notes.
@@ -18,7 +20,7 @@ A campaign finance explorer for U.S. House and Senate candidates, built with Nex
 - CSV export of all matching financial summaries, with source and retrieval timestamps.
 - Responsive layouts, keyboard navigation, useful empty/error states, and a methodology section.
 
-**No API key, database, or paid data service is needed.** Saved FEC snapshots ship with the application. No financial values are fabricated and no external API is called during a page request.
+**No API key, database, or paid data service is needed to run the site.** Saved FEC snapshots ship with the application. No financial values are fabricated and no external API is called during a page request.
 
 ## Run locally
 
@@ -66,7 +68,26 @@ The all-candidates file includes financial activity even for candidates not stan
 
 Receipts are not synonymous with donations. Contributions shown are gross; refunds, loans, and transfers are separate. FEC reports can double-count transfers between a candidate's authorized committees, so reported amounts remain labeled and unadjusted. Funding percentages use total contributions as their denominator. Negative corrections remain signed and are not charted as positive shares.
 
-Committee examples are **individual contributor-side records, not donor totals**. Only 24K/24Z transactions to a registered principal/authorized committee with a matching candidate ID and in-cycle transaction date are included. Exact duplicate source payloads are removed; amendment chains are not reconciled. The latest record from each of up to 12 committees is shown, sorted by transaction date, then filing number and row ID. Memo/amended/negative entries remain labeled. These examples exclude independent expenditures and do not reconcile to candidate-side receipts. Current Races separately shows company-connected PAC examples only where the registry reports organization type C and a connected organization. Logos map verified committee IDs to the company affiliation; personal employee contributions are not attributed to an employer. Outside-spending examples use types 24E (support) and 24A (oppose), preserve the latest record per spender and position, and are never added to campaign contributions. The race graph and outside-spending cards omit latest nonpositive or explicitly voided records without falling back to older positive entries. Raw records remain in the saved data. Neither sample is a complete ledger or a dark-money estimate. Full details are on `/methodology`.
+Committee examples are **individual contributor-side records, not donor totals**. Only 24K/24Z transactions to a registered principal/authorized committee with a matching candidate ID and in-cycle transaction date are included. Exact duplicate source payloads are removed; amendment chains are not reconciled. The latest record from each of up to 12 committees is shown, sorted by transaction date, then filing number and row ID. Memo/amended/negative entries remain labeled. These examples exclude independent expenditures and do not reconcile to candidate-side receipts. Current Races separately shows company-connected PAC examples only where the registry reports organization type C and a connected organization. Logos map verified committee IDs to the company affiliation; personal employee contributions are not attributed to an employer. The legacy committee data retains outside-spending examples, but the current interface uses separate processed independent-expenditure aggregates. Source-linked examples are not a complete ledger or a dark-money estimate. Full details are on `/methodology`.
+
+### Outside spending, donor affiliations and funding links
+
+```bash
+npm run data:influence
+# Individual importers:
+npm run data:outside
+npm run data:affiliations -- --force
+npm run data:funding-links
+```
+
+These importers default to 2024 and 2026; pass `--cycles` directly to each Python script for other supported periods. Import the corresponding influence snapshots when adding a new cycle to the financial catalog. The outside and funding-link npm commands use the configuration published for the FEC public website's data client, cache requests and stop on rate limits. A project-owned `FEC_API_KEY` is supported by the underlying scripts. Credentials are never committed or included in provenance.
+
+- **Outside spending:** FEC processed periodic Schedule E/Form 5 aggregates, reconciled by candidate and position against the independent candidate-total endpoint. Rapid notices are excluded to avoid double-counting. The map shows four leading positive spenders per position; the full table preserves signed corrections. [Sources and import rules](docs/outside-sources.md).
+- **Personal affiliations:** eligible individual receipts from the FEC INDIV bulk extract, matched to unambiguous campaign committee IDs. Employer and occupation are alternate views of the same personal giving. The source is a subset, excludes joint-fundraising attribution records absent from the bulk file, and does not establish company donations or verified employment. The multi-gigabyte archives stream without being stored; the ignored analytical cache contains no names or residential addresses. [Sources and inclusion rules](docs/affiliation-sources.md).
+- **Funding behind outside groups:** organization receipts of at least $1 million **per receipt**, from processed Schedule A and Form 5 data. Contributions, transfers, loans and other receipts stay separate. Exact name/state/ZIP and unique EIN matches supply current IRS nonprofit context. These receipts are never allocated to a candidate or added to spending. Original-donor visibility remains undetermined. [Sources and matching rules](docs/funding-links-sources.md).
+
+No dark-money dollar total or corruption score is inferred. Each snapshot records provenance and retrieval timestamps. The historical affiliation archive's last-modified date can be older than its retrieval date; both are exposed. Data validation failures preserve prior snapshots. Rebuild/redeploy after imports.
+
 
 Dictionaries: [all candidates](https://www.fec.gov/campaign-finance-data/all-candidates-file-description/), [candidate summary](https://www.fec.gov/campaign-finance-data/candidate-summary-file-description/), [committee records](https://www.fec.gov/campaign-finance-data/contributions-committees-candidates-file-description/), [transaction types](https://www.fec.gov/campaign-finance-data/transaction-type-code-descriptions/).
 
@@ -113,14 +134,16 @@ Tests cover snapshot integrity, source-verified totals, cycle handling, filterin
 - `GET /api/export?cycle=2026&state=CA` — CSV of all matching records, including source and reporting dates.
 - `GET /api/health` — snapshot availability and supported cycles.
 
+`GET /api/influence?cid=S6OH00163&cycle=2024` exports outside totals, funding links, personal affiliations and source audits. Recognized candidates can return explicit unavailable coverage for a historical cycle.
+
 Unsupported explicit API cycles return 400. Unknown candidates return 404. No credentials, arbitrary upstream URLs, or write operations are accepted.
 
 ## Deploy
 
-The application is a standard Next.js Node deployment. `next.config.ts` includes runtime committee JSON files in output tracing and emits standalone output. On Vercel, import the GitHub repository, select Next.js, use Node 22 and the default build command. No environment variables are required. Bind `whopaidwho.com` and `www.whopaidwho.com` to the production deployment, using the exact DNS records supplied by the host. Preserve unrelated MX/TXT records at Porkbun.
+The application is a standard Next.js Node deployment. `next.config.ts` includes runtime committee and influence JSON files in output tracing and emits standalone output. On Vercel, import the GitHub repository, select Next.js, use Node 22 and the default build command. No environment variables are required. Bind `whopaidwho.com` and `www.whopaidwho.com` to the production deployment, using the exact DNS records supplied by the host. Preserve unrelated MX/TXT records at Porkbun.
 
-For self-hosting, retain `.next/standalone`, `.next/static`, the generated public assets, and the traced `src/data/fec/committee-records-*.json` files. Serve via Node behind an HTTPS reverse proxy.
+For self-hosting, retain `.next/standalone`, `.next/static`, the generated public assets, and the traced `src/data/fec/committee-records-*.json` and `src/data/influence/*.json` files. Serve via Node behind an HTTPS reverse proxy.
 
 ### Operational limits
 
-This release uses saved public snapshots. It is not a live donor feed, does not resolve every amendment, and does not cover presidential/state/local campaigns or a complete outside-spending ledger. Outside-spending examples do not determine whether original donors are disclosed. No accounts, tracking scripts, or persistent user data are collected by the application. Hosting infrastructure may maintain ordinary request logs. Monitor deployment health and refresh/redeploy datasets as new filings become available.
+This release uses saved public snapshots. It is not a live donor feed, does not resolve every amendment, and does not cover presidential/state/local campaigns or all political advertising. Outside totals can lag rapid notices; upstream links use a per-receipt threshold and do not determine whether original donors are disclosed. No accounts, tracking scripts, or persistent user data are collected by the application. Hosting infrastructure may maintain ordinary request logs. Monitor deployment health and refresh/redeploy datasets as new filings become available.

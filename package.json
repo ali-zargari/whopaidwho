@@ -13,7 +13,11 @@
     "data:refresh": "python3 scripts/refresh-data.py",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "data:accountability": "python3 scripts/refresh-accountability.py",
-    "test:ingest": "python3 -m unittest discover -s tests -p \"*_test.py\""
+    "test:ingest": "python3 -m unittest discover -s tests -p \"*_test.py\"",
+    "data:outside": "python3 scripts/refresh-outside.py --public-website",
+    "data:affiliations": "python3 scripts/refresh-affiliations.py",
+    "data:funding-links": "python3 scripts/refresh-funding-links.py --public-website",
+    "data:influence": "npm run data:outside && npm run data:affiliations -- --force && npm run data:funding-links"
   },
   "dependencies": {
     "lucide-react": "^1.46.0",
