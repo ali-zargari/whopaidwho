@@ -97,6 +97,13 @@ export default function Methodology() {
               Party, state, and district are as recorded in the source snapshot.
               An absent record is not evidence of zero fundraising.
             </p>
+            <p>
+              The candidate directory is alphabetical by displayed name, with
+              name, state, office, party and cycle filters. Each card uses the
+              same categories. A selected reporting cycle is not necessarily
+              the year of that candidate’s most recent election; use the cycle
+              selector to inspect an earlier campaign.
+            </p>
           </section>
           <section id="definitions">
             <span className="eyebrow">03 / DEFINITIONS</span>
@@ -122,9 +129,29 @@ export default function Methodology() {
               <div>
                 <dt>Individual contributions</dt>
                 <dd>
-                  Money reported as coming from individuals. The funding bar
-                  divides this by total contributions, not total receipts. An
-                  employer is not treated as the donor of an employee’s money.
+                  Money reported as coming from individuals, including both
+                  small and large personal donations. The contribution mix
+                  divides each category by total contributions, not total
+                  receipts. Individual contributions are not a measure of
+                  grassroots support. An employer is not treated as the donor
+                  of an employee’s money.
+                </dd>
+              </div>
+              <div>
+                <dt>Reading the overview cards</dt>
+                <dd>
+                  Campaign receipts, outside support and outside opposition
+                  have separate amounts and source links. The three bars share
+                  a dollar scale within each card. They are not added into a
+                  total or used to infer influence. Outside spending includes
+                  processed independent expenditures from multiple types of
+                  filers; it does not mean only Super PAC or corporate money.
+                  Campaign reporting dates and outside-data retrieval dates
+                  describe different timelines. Candidate loans appear
+                  separately from the four contribution categories. The
+                  expanded receipt breakdown also shows other loans, transfers
+                  and the calculated remaining receipts, which may include
+                  other receipt types, rounding or reporting differences.
                 </dd>
               </div>
               <div>

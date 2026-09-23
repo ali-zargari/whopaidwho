@@ -2,6 +2,7 @@ import { ArrowUpRight, Database, Landmark, Users } from "lucide-react";
 import Link from "next/link";
 import Explorer from "@/components/Explorer";
 import { accountabilitySummary } from "@/lib/accountability";
+import { outsideOverview } from "@/lib/influence";
 import {
   parseFilters,
   searchCandidates,
@@ -19,6 +20,10 @@ export default async function Home({
   const filters = parseFilters(params);
   const data = snapshot(filters.cycle);
   const result = searchCandidates(filters);
+  const { outside, outsideDownloadedAt } = await outsideOverview(
+    result.candidates.map((candidate) => candidate.id),
+    filters.cycle,
+  );
   return (
     <main id="main" className="page-shell">
       <section className="intro">
@@ -104,6 +109,8 @@ export default async function Home({
         accountability={Object.fromEntries(
           result.candidates.map((c) => [c.id, accountabilitySummary(c.id)]),
         )}
+        outside={outside}
+        outsideDownloadedAt={outsideDownloadedAt}
       />
       <section className="context-band">
         <span className="context-number">01 /</span>
